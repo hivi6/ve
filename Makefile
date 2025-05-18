@@ -1,7 +1,7 @@
 BIN	:= bin
 TARGET	:= ve
 CC	:= gcc
-C_FLAGS	:= -Wall -Wextra -pedantic -std=c99
+C_FLAGS	:= -Wall -Wextra
 H_FILES	:= $(shell find src -name '*.h')
 C_FILES	:= $(shell find src -name '*.c')
 

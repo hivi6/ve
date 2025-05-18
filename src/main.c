@@ -1,7 +1,7 @@
-#include <stdio.h>
+#include "term.h"
 
 int main()
 {
-	printf("Hello, World!\n");
+	term_run();
 	return 0;
 }
