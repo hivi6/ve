@@ -15,8 +15,9 @@ void ab_free(struct ab_t *ab)
 
 void ab_append(struct ab_t *ab, const char *str, int len)
 {
-	ab->buffer = realloc(ab->buffer, ab->len + len);
+	ab->buffer = realloc(ab->buffer, ab->len + len + 1);
 	for (int i = 0; i < len; i++)
 		ab->buffer[i + ab->len] = str[i];
 	ab->len += len;
+	ab->buffer[ab->len] = 0;
 }

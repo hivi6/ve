@@ -1,6 +1,8 @@
 #ifndef VE_H
 #define VE_H
 
+#include "util.h"
+
 #define VE_VERSION "0.0.1"
 #define VE_INTRO "VE - Text Editor"
 #define VE_TABSTOP 8
@@ -10,12 +12,17 @@
  *
  * members:
  *	text	stores the characters in the text buffer
- *	len	length of the text buffer
+ *	tlen	length of the text buffer
+ *	render	final render of the line
+ *	rlen	length of the render buffer
  */
 struct ve_row_t
 {
 	char *text;
-	int len;
+	int tlen;
+
+	char *render;
+	int rlen;
 };
 
 /**
@@ -32,6 +39,10 @@ struct ve_row_t
  *	row_len		number of rows in the editor
  *	mode		current mode
  *	is_running	is the editor running
+ *	prompt		for stuff like :wq, /search; VE_PROMPT_MODE
+ *	msg		for messages
+ *	is_error	is the message an error
+ *	show_msg	show message in status bar
  */
 struct ve_t
 {
@@ -44,6 +55,12 @@ struct ve_t
 
 	int mode;
 	int is_running;
+
+	struct ab_t prompt;
+
+	struct ab_t msg;
+	int is_error;
+	int show_msg;
 };
 
 
@@ -66,6 +83,7 @@ enum
 {
 	VE_NORMAL_MODE = 0,
 	VE_INSERT_MODE,
+	VE_PROMPT_MODE,
 };
 
 // ========================================
@@ -85,6 +103,7 @@ enum
 	ENTER_KEY,
 	BACKSPACE_KEY,
 	DELETE_KEY,
+	ESC_KEY,
 };
 
 // ========================================

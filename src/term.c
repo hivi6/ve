@@ -52,7 +52,6 @@ void term_run()
 	{
 		term_render();
 		term_read();
-		if (LAST_KEY == 'q') break;
 	}
 	term_free();
 }
@@ -165,20 +164,44 @@ void term_render_status(struct ab_t *ab)
 	char buffer[80];
 	int buffer_len = 0;
 
+	char modes[3];
+	modes[VE_INSERT_MODE] = 'I';
+	modes[VE_PROMPT_MODE] = 'P';
+	modes[VE_NORMAL_MODE] = 'N';
+
 	// Mention the line number and column number
-	snprintf(buffer, sizeof(buffer), "%d/%d,%d [%c]", 
+	snprintf(buffer, sizeof(buffer), "%d/%d,%d [%c] %d", 
 			STATE.cursor_row + STATE.offset_row + 1,
 			STATE.row_len, 
 			STATE.cursor_col + STATE.offset_col + 1,
-			STATE.mode ? 'N' : 'I');
+			modes[STATE.mode], LAST_KEY);
 	buffer_len = strlen(buffer);
-	if (buffer_len >= STATE.ws_col) buffer_len = STATE.ws_col;
 
 	// goto to the last row and print the status
 	ab_append(ab, "\r\n", 2);
-	int padding = STATE.ws_col - buffer_len;
+
+	// If prompt then add the prompt
+	int remaining = STATE.ws_col;
+	if (STATE.mode == VE_PROMPT_MODE)
+	{
+		ab_append(ab, STATE.prompt.buffer, STATE.prompt.len);
+		remaining -= STATE.prompt.len;
+	}
+
+	if (STATE.is_error) ab_append(ab, "\x1b[41m", 5);
+	if (STATE.show_msg)
+	{
+
+		ab_append(ab, STATE.msg.buffer, STATE.msg.len);
+		remaining -= STATE.msg.len;
+	}
+
+	if (buffer_len >= STATE.ws_col) buffer_len = remaining;
+	int padding = remaining - buffer_len;
 	for (int i = 0; i < padding; i++)
 		ab_append(ab, " ", 1);
+	ab_append(ab, "\x1b[m", 3);
+	
 	ab_append(ab, buffer, buffer_len);
 }
 
@@ -193,6 +216,24 @@ void term_read()
 	// read printable buffer character
 	if (32 <= buffer[0] && buffer[0] <= 126 && buffer[1] == 0)
 		key = buffer[0];
+
+	// handle enter
+	if (buffer[0] == '\r' && buffer[1] == 0)
+	{
+		key = ENTER_KEY;
+	}
+
+	// handle backspace
+	if (buffer[0] == 127 && buffer[1] == 0)
+	{
+		key = BACKSPACE_KEY;
+	}
+
+	// handle escape
+	if (buffer[0] == '\x1b' && buffer[1] == 0)
+	{
+		key = ESC_KEY;
+	}
 
 	// handle arrow keys
 	if (buffer[0] == '\x1b' && buffer[1] == '[' && buffer[3] == 0)
@@ -210,6 +251,12 @@ void term_read()
 			break;
 		case 'D':
 			key = LEFT_KEY;
+			break;
+		case 'H':
+			key = HOME_KEY;
+			break;
+		case 'F':
+			key = END_KEY;
 			break;
 		}
 	}
