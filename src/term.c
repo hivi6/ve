@@ -179,29 +179,30 @@ void term_render_status(struct ab_t *ab)
 	// goto to the last row and print the status
 	ab_append(ab, "\r\n", 2);
 
-	// If prompt then add the prompt
-	int remaining = STATE.ws_col;
+	// If prompt then only show the prompt
 	if (STATE.mode == VE_PROMPT_MODE)
 	{
 		ab_append(ab, STATE.prompt.buffer, STATE.prompt.len);
-		remaining -= STATE.prompt.len;
 	}
-
-	if (STATE.is_error) ab_append(ab, "\x1b[41m", 5);
-	if (STATE.show_msg)
+	else
 	{
+		int remaining = STATE.ws_col;
+		if (STATE.is_error) ab_append(ab, "\x1b[41m", 5);
+		if (STATE.show_msg)
+		{
 
-		ab_append(ab, STATE.msg.buffer, STATE.msg.len);
-		remaining -= STATE.msg.len;
+			ab_append(ab, STATE.msg.buffer, STATE.msg.len);
+			remaining -= STATE.msg.len;
+		}
+
+		if (buffer_len >= STATE.ws_col) buffer_len = remaining;
+		int padding = remaining - buffer_len;
+		for (int i = 0; i < padding; i++)
+			ab_append(ab, " ", 1);
+		ab_append(ab, "\x1b[m", 3);
+		
+		ab_append(ab, buffer, buffer_len);
 	}
-
-	if (buffer_len >= STATE.ws_col) buffer_len = remaining;
-	int padding = remaining - buffer_len;
-	for (int i = 0; i < padding; i++)
-		ab_append(ab, " ", 1);
-	ab_append(ab, "\x1b[m", 3);
-	
-	ab_append(ab, buffer, buffer_len);
 }
 
 void term_read()
