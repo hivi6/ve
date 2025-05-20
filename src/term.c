@@ -39,7 +39,6 @@ void term_enable_alt();
 void term_disable_alt();
 void term_update_ws();
 void term_sigwinch(int signum);
-void term_printf(const char *fmt, ...);
 
 // ========================================
 // terminal run - implementation
@@ -235,6 +234,24 @@ void term_read()
 		key = ESC_KEY;
 	}
 
+	// handle special keys
+	if (buffer[0] == '\x1b' && buffer[1] == '[' && buffer[3] == '~' &&
+		buffer[4] == 0)
+	{
+		switch(buffer[2])
+		{
+		case '3':
+			key = DELETE_KEY;
+			break;
+		case '5':
+			key = PAGEUP_KEY;
+			break;
+		case '6':
+			key = PAGEDOWN_KEY;
+			break;
+		}
+	}
+
 	// handle arrow keys
 	if (buffer[0] == '\x1b' && buffer[1] == '[' && buffer[3] == 0)
 	{
@@ -350,11 +367,3 @@ void term_sigwinch(int)
 	term_update_ws();
 }
 
-void term_printf(const char *fmt, ...)
-{
-	va_list valist;
-	va_start (valist, fmt);
-	vprintf(fmt, valist);
-	fflush(stdout);
-	va_end(valist);
-}
