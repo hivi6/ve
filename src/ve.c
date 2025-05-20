@@ -128,6 +128,25 @@ int ve_normal(struct ve_t *ve, int key)
 		if (ve->cursor_row != 0) ve->cursor_row--;
 		break;
 
+	case HOME_KEY:
+	case END_KEY:
+	case PAGEDOWN_KEY:
+	case PAGEUP_KEY:
+		{
+			int unit = LEFT_KEY;
+			if (key == END_KEY) unit = RIGHT_KEY;
+			if (key == PAGEDOWN_KEY) unit = DOWN_KEY;
+			if (key == PAGEUP_KEY) unit = UP_KEY;
+			
+			int upto = ve->ws_col;
+			if (key == PAGEDOWN_KEY || key == PAGEUP_KEY)
+				upto = ve->ws_row;
+			
+			for (int i = 0; i < upto; i++)
+				ve_next(ve, unit);
+		}
+		break;
+
 	case ':':
 	case '/':
 		{
