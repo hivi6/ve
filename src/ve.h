@@ -12,16 +12,18 @@ enum
 	ENTER_KEY,
 	DELETE_KEY,
 	BACKSPACE_KEY,
+	QUIT_KEY,
 };
 
 /**
  * visual editor
  *
  * members:
- *	lines	array of string to store lines
- *	sz	number of lines
- *	crow	cursor position; row
- *	ccol	cursor position; col
+ *	lines		array of string to store lines
+ *	sz		number of lines
+ *	crow		cursor position; row
+ *	ccol		cursor position; col
+ *	is_running	is the editor running?
  */
 struct ve_t
 {
@@ -30,6 +32,8 @@ struct ve_t
 
 	int crow;
 	int ccol;
+
+	int is_running;
 };
 
 /**

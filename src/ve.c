@@ -40,6 +40,7 @@ int ve_init(struct ve_t *self)
 	self->sz = 1;
 	self->crow = 0;
 	self->ccol = 0;
+	self->is_running = 1;
 
 	return NO_ERR;
 }
@@ -54,8 +55,14 @@ int ve_free(struct ve_t *self)
 
 int ve_next(struct ve_t *self, int key)
 {
+	if (!self->is_running)
+		return NO_ERR;
+
 	switch(key)
 	{
+	case QUIT_KEY:
+		self->is_running = 0;
+		break;
 	case UP_KEY:
 	case DOWN_KEY:
 		{
@@ -70,9 +77,26 @@ int ve_next(struct ve_t *self, int key)
 	case RIGHT_KEY:
 		{
 			int dx = (key == LEFT_KEY) ? -1 : +1;
-			if (0 <= self->ccol + dx && 
-				self->ccol + dx <= self->lines[self->crow].len)
-				self->ccol += dx;
+			self->ccol += dx;
+			if (self->ccol < 0) 
+			{
+				self->ccol = 0;
+				if (self->crow > 0)
+				{
+					self->crow--;
+					self->ccol = self->lines[self->crow].len;
+				}
+				
+			}
+			if (self->ccol > self->lines[self->crow].len)
+			{
+				self->ccol = self->lines[self->crow].len;
+				if (self->crow < self->sz - 1)
+				{
+					self->crow++;
+					self->ccol = 0;
+				}
+			}
 		}
 		break;
 	case ENTER_KEY:
@@ -168,6 +192,7 @@ int ve_delete(struct ve_t *self)
 		// delete the newline
 		struct str_t *prev_line = self->lines + self->crow - 1;
 		struct str_t *cur_line = self->lines + self->crow;
+		int prev_line_pos = prev_line->len;
 		str_appends(prev_line, cur_line->text, cur_line->len);
 		str_free(cur_line);
 		for (int i = self->crow; i < self->sz - 1; i++)
@@ -176,7 +201,7 @@ int ve_delete(struct ve_t *self)
 		// decrease the row value
 		self->sz--;
 		self->crow--;
-		self->ccol = prev_line->len;
+		self->ccol = prev_line_pos;
 	}
 	else if (self->ccol > 0)
 	{
