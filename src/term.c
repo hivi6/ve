@@ -101,6 +101,14 @@ void term_render()
 	struct str_t b;
 	str_init(&b);
 
+	// TODO: calculate the offsets
+	OFFSET_ROW = 0;
+	OFFSET_COL = 0;
+	if (GLOBAL.crow >= WS_ROWS)
+		OFFSET_ROW = GLOBAL.crow - WS_ROWS + 1;
+	if (GLOBAL.ccol >= WS_COLS)
+		OFFSET_COL = GLOBAL.ccol - WS_COLS + 1;
+
 	// make the cursor invisible
 	// clear the screen
 	// and go to the top left corner of screen
@@ -114,8 +122,8 @@ void term_render()
 	// position the cursor
 	char buffer[80];
 	snprintf(buffer, sizeof(buffer), "\x1b[%d;%dH",
-		GLOBAL.crow + 1,
-		GLOBAL.ccol + 1);
+		(GLOBAL.crow - OFFSET_ROW) + 1,
+		(GLOBAL.ccol - OFFSET_COL) + 1);
 	str_appends(&b, buffer, strlen(buffer));
 
 	// make the cursor visible again
@@ -294,6 +302,13 @@ void term_render_line(struct str_t *b, int line)
 	else
 	{
 		struct str_t line_str = GLOBAL.lines[line_index];
-		str_appends(b, line_str.text, line_str.len);
+		if (line_str.len < OFFSET_COL)
+			return;
+
+		char *start = line_str.text + OFFSET_COL;
+		int upto = line_str.len - OFFSET_COL;
+		if (upto >= WS_COLS)
+			upto = WS_COLS;
+		str_appends(b, start, upto);
 	}
 }
