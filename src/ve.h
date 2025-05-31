@@ -12,7 +12,15 @@ enum
 	ENTER_KEY,
 	DELETE_KEY,
 	BACKSPACE_KEY,
+	ESC_KEY,
 	QUIT_KEY,
+};
+
+enum
+{
+	NORMAL_MODE = 0,
+	INSERT_MODE,
+	PROMPT_MODE,
 };
 
 /**
@@ -24,6 +32,10 @@ enum
  *	crow		cursor position; row
  *	ccol		cursor position; col
  *	is_running	is the editor running?
+ *	mode		current mode
+ *	prompt		current prompt command
+ *	msg		any message from the editor for the user
+ *	is_error	is the message related to error
  */
 struct ve_t
 {
@@ -34,6 +46,11 @@ struct ve_t
 	int ccol;
 
 	int is_running;
+	int mode;
+
+	struct str_t prompt;
+	struct str_t msg;
+	int is_error;
 };
 
 /**

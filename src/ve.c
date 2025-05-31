@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "ve.h"
 #include "util.h"
@@ -26,6 +27,41 @@ int ve_add(struct ve_t *self, char ch);
  */
 int ve_delete(struct ve_t *self);
 
+/**
+ * go to the next state based on the key and insert mode
+ *
+ * params:
+ *	self 	self pointer
+ *	key	state change based on the key pressed
+ */
+int ve_insert_mode(struct ve_t *self, int key);
+
+/**
+ * go to the next state based on the key and normal mode
+ *
+ * params:
+ *	self 	self pointer
+ *	key	state change based on the key pressed
+ */
+int ve_normal_mode(struct ve_t *self, int key);
+
+/**
+ * go to the next state based on the key and prompt mode
+ *
+ * params:
+ *	self 	self pointer
+ *	key	state change based on the key pressed
+ */
+int ve_prompt_mode(struct ve_t *self, int key);
+
+/**
+ * run the prompt
+ *
+ * params:
+ *	self 	self pointer
+ */
+int ve_prompt_run(struct ve_t *self);
+
 // ========================================
 // ve_t - definitions
 // ========================================
@@ -41,6 +77,10 @@ int ve_init(struct ve_t *self)
 	self->crow = 0;
 	self->ccol = 0;
 	self->is_running = 1;
+	self->mode = NORMAL_MODE;
+	str_init(&self->prompt);
+	str_init(&self->msg);
+	self->is_error = 0;
 
 	return NO_ERR;
 }
@@ -57,6 +97,11 @@ int ve_next(struct ve_t *self, int key)
 {
 	if (!self->is_running)
 		return NO_ERR;
+
+	// make sure to remove the message
+	str_free(&self->msg);
+	str_init(&self->msg);
+	self->is_error = 0;
 
 	switch(key)
 	{
@@ -99,25 +144,18 @@ int ve_next(struct ve_t *self, int key)
 			}
 		}
 		break;
-	case ENTER_KEY:
-		ve_add(self, '\n');
-		break;
-	case DELETE_KEY:
-		if (self->crow != self->sz - 1 ||
-			self->ccol != self->lines[self->crow].len)
-		{
-			ve_next(self, RIGHT_KEY);
-			ve_delete(self);
-		}
-		break;
-	case BACKSPACE_KEY:
-		ve_delete(self);
+	case ESC_KEY:
+		self->mode = NORMAL_MODE;
+		str_free(&self->prompt);
+		str_init(&self->prompt);
 		break;
 	default:
-		// check if printable character
-		if (32 <= key && key <= 126)
-			ve_add(self, (char)key);
-		break;
+		if (self->mode == INSERT_MODE)
+			ve_insert_mode(self, key);
+		else if (self->mode == NORMAL_MODE)
+			ve_normal_mode(self, key);
+		else
+			ve_prompt_mode(self, key);
 	}
 
 	return NO_ERR;
@@ -213,5 +251,102 @@ int ve_delete(struct ve_t *self)
 		line->len--;
 		self->ccol--;
 	}
+	return NO_ERR;
+}
+
+int ve_insert_mode(struct ve_t *self, int key)
+{
+	switch(key)
+	{
+	case ENTER_KEY:
+		ve_add(self, '\n');
+		break;
+	case DELETE_KEY:
+		if (self->crow != self->sz - 1 ||
+			self->ccol != self->lines[self->crow].len)
+		{
+			ve_next(self, RIGHT_KEY);
+			ve_delete(self);
+		}
+		break;
+	case BACKSPACE_KEY:
+		ve_delete(self);
+		break;
+	default:
+		// check if printable character
+		if (32 <= key && key <= 126)
+			ve_add(self, (char)key);
+		break;
+	}
+	return NO_ERR;
+}
+
+int ve_normal_mode(struct ve_t *self, int key)
+{
+	switch(key)
+	{
+	case 'i':
+		self->mode = INSERT_MODE;
+		break;
+	case ':':
+		self->mode = PROMPT_MODE;
+		ve_prompt_mode(self, key);
+		break;
+	}
+	return NO_ERR;
+}
+
+int ve_prompt_mode(struct ve_t *self, int key)
+{
+	switch(key)
+	{
+	case ENTER_KEY:
+		// TODO: execute prompt
+		ve_prompt_run(self);
+
+		// reset the prompt
+		self->mode = NORMAL_MODE;
+		str_free(&self->prompt);
+		str_init(&self->prompt);
+		break;
+	default:
+		// build the prompt
+		if (32 <= key && key <= 126)
+			str_appendc(&self->prompt, (char) key);
+		break;
+	}
+
+	return NO_ERR;
+}
+
+int ve_prompt_run(struct ve_t *self)
+{
+	// reset the message
+	str_free(&self->msg);
+	str_init(&self->msg);
+
+	// create the prompt
+	char *prompt = NULL;
+	str_build(&self->prompt, &prompt);
+
+	// add a basic hello prompt
+	if (strcmp(prompt, ":hello") == 0)
+	{
+		const char *res = "Hello, World!";
+		str_appends(&self->msg, res, strlen(res));
+	}
+	else if (strcmp(prompt, ":quit") == 0)
+	{
+		self->is_running = 0;
+	}
+	else
+	{
+		char buffer[80];
+		snprintf(buffer, sizeof(buffer), "No such command '%s'", prompt);
+		self->is_error = 1;
+		str_appends(&self->msg, buffer, strlen(buffer));
+	}
+
+	free(prompt);
 	return NO_ERR;
 }

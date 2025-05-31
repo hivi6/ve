@@ -63,7 +63,7 @@ int str_appendc(struct str_t *self, char ch);
  *	src	source string which will be appended
  *	len	length of the string
  */
-int str_appends(struct str_t *self, char *src, int len);
+int str_appends(struct str_t *self, const char *src, int len);
 
 /**
  * build a string from the str_t type

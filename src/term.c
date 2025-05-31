@@ -39,6 +39,7 @@ void term_disable_raw();
 void term_disable_alt();
 void term_render_lines(struct str_t *b);
 void term_render_line(struct str_t *b, int line);
+void term_render_status_bar(struct str_t *b);
 
 // ========================================
 // term.h - definition
@@ -119,6 +120,9 @@ void term_render()
 	// render the lines
 	term_render_lines(&b);
 
+	// render the status bar
+	term_render_status_bar(&b);
+
 	// position the cursor
 	char buffer[80];
 	snprintf(buffer, sizeof(buffer), "\x1b[%d;%dH",
@@ -156,6 +160,12 @@ void term_read()
 	if (buffer[0] == 127 && buffer[1] == 0)
 	{
 		key = BACKSPACE_KEY;
+	}
+
+	// handle esc key
+	if (buffer[0] == '\x1b' && buffer[1] == 0)
+	{
+		key = ESC_KEY;
 	}
 
 	// handle quit key
@@ -311,4 +321,42 @@ void term_render_line(struct str_t *b, int line)
 			upto = WS_COLS;
 		str_appends(b, start, upto);
 	}
+}
+
+void term_render_status_bar(struct str_t *b)
+{
+	str_appends(b, "\r\n", 2);
+
+	// Add the mode info
+	char buffer[80];
+	if (GLOBAL.msg.len == 0)
+	{
+		if (GLOBAL.mode == INSERT_MODE)
+			snprintf(buffer, sizeof(buffer), "[INSERT]");
+		else if (GLOBAL.mode == NORMAL_MODE)
+			snprintf(buffer, sizeof(buffer), "[NORMAL]");
+		else
+		{
+			char *prompt = NULL;
+			str_build(&GLOBAL.prompt, &prompt);
+			snprintf(buffer, sizeof(buffer), "%s", prompt);
+			free(prompt);
+		}
+	}
+	else
+	{
+		char *msg = NULL;
+		str_build(&GLOBAL.msg, &msg);
+		snprintf(buffer, sizeof(buffer), "%s", msg);
+		free(msg);
+	}
+	int len = strlen(buffer);
+	if (len > WS_COLS)
+		len = WS_COLS;
+
+	str_appends(b, "\x1b[1m", 4);
+	if (GLOBAL.is_error)
+		str_appends(b, "\x1b[41m", 5);
+	str_appends(b, buffer, len);
+	str_appends(b, "\x1b[m", 3);
 }

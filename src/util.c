@@ -42,7 +42,7 @@ int str_appendc(struct str_t *self, char ch)
 	return NO_ERR;
 }
 
-int str_appends(struct str_t *self, char *src, int len)
+int str_appends(struct str_t *self, const char *src, int len)
 {
 	for (int i = 0; i < len; i++)
 	{

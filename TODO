@@ -1,2 +1,6 @@
-- [ ] Add support for prompt
+- [x] Add support for basic prompt
+	- [x] quit
+	- [x] hello
+- [ ] Add support for adding file name
+- [ ] Add support for saving file
 - [ ] Add support for tab rendering
