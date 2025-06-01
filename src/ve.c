@@ -66,6 +66,7 @@ void ve_prompt_run_hello(struct ve_t *self);
 void ve_prompt_run_discard(struct ve_t *self);
 void ve_prompt_run_quit(struct ve_t *self);
 void ve_prompt_run_saveas(struct ve_t *self);
+void ve_prompt_run_read(struct ve_t *self);
 
 // ========================================
 // ve_t - definitions
@@ -362,6 +363,8 @@ int ve_prompt_run(struct ve_t *self)
 		ve_prompt_run_quit(self);
 	else if (strcmp(prompt, ":saveas") == 0)
 		ve_prompt_run_saveas(self);
+	else if (strcmp(prompt, ":read") == 0)
+		ve_prompt_run_read(self);
 	else
 	{
 		char buffer[80];
@@ -417,6 +420,50 @@ void ve_prompt_run_saveas(struct ve_t *self)
 	// set the message
 	char buffer2[80];
 	snprintf(buffer2, sizeof(buffer2), "Filename changed to '%s'", buffer);
+	str_appends(&self->msg, buffer2, strlen(buffer2));
+
+	// free the prompt
+	free(prompt);
+}
+
+void ve_prompt_run_read(struct ve_t *self)
+{
+	// get the filename argument
+	char *prompt = NULL;
+	str_build(&self->prompt, &prompt);
+	char buffer[80];
+	sscanf(prompt, ":read %s", buffer);
+
+	// read the file content
+	FILE *fd = fopen(buffer, "r");
+
+	// couldn't open the file
+	if (fd == NULL)
+	{
+		char buffer2[80];
+		snprintf(buffer2, sizeof(buffer2), "Couldn't open '%s'", buffer);
+		str_appends(&self->msg, buffer2, strlen(buffer2));
+		self->is_error = 1;
+		free(prompt);
+		return;
+	}
+
+	// set the file as dirty
+	self->dirty = 1;
+
+	// read the contents of the file
+	do {
+		char ch = fgetc(fd);
+		if (feof(fd)) break;
+
+		ve_add(self, ch);
+	} while (1);
+
+	fclose(fd);
+
+	// set the message
+	char buffer2[80];
+	snprintf(buffer2, sizeof(buffer2), "Opened '%s'", buffer);
 	str_appends(&self->msg, buffer2, strlen(buffer2));
 
 	// free the prompt
