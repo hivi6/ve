@@ -463,7 +463,7 @@ void ve_prompt_run_read(struct ve_t *self)
 
 	// set the message
 	char buffer2[80];
-	snprintf(buffer2, sizeof(buffer2), "Opened '%s'", buffer);
+	snprintf(buffer2, sizeof(buffer2), "Read '%s'", buffer);
 	str_appends(&self->msg, buffer2, strlen(buffer2));
 
 	// free the prompt
