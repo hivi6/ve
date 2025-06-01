@@ -331,10 +331,20 @@ void term_render_status_bar(struct str_t *b)
 	char buffer[80];
 	if (GLOBAL.msg.len == 0)
 	{
+		// get filename
+		static char *null_filename = "<NULL>";
+		char *filename = NULL;
+		if (GLOBAL.filename.len != 0)
+		{
+			str_build(&GLOBAL.filename, &filename);
+		}
+		else
+			filename = null_filename;
+	
 		if (GLOBAL.mode == INSERT_MODE)
-			snprintf(buffer, sizeof(buffer), "[INSERT]");
+			snprintf(buffer, sizeof(buffer), "[INSERT] - %s", filename);
 		else if (GLOBAL.mode == NORMAL_MODE)
-			snprintf(buffer, sizeof(buffer), "[NORMAL]");
+			snprintf(buffer, sizeof(buffer), "[NORMAL] - %s", filename);
 		else
 		{
 			char *prompt = NULL;
@@ -342,6 +352,10 @@ void term_render_status_bar(struct str_t *b)
 			snprintf(buffer, sizeof(buffer), "%s", prompt);
 			free(prompt);
 		}
+
+		// free filename
+		if (GLOBAL.filename.len != 0)
+			free(filename);
 	}
 	else
 	{

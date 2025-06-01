@@ -65,6 +65,7 @@ int ve_prompt_run(struct ve_t *self);
 void ve_prompt_run_hello(struct ve_t *self);
 void ve_prompt_run_discard(struct ve_t *self);
 void ve_prompt_run_quit(struct ve_t *self);
+void ve_prompt_run_saveas(struct ve_t *self);
 
 // ========================================
 // ve_t - definitions
@@ -86,6 +87,7 @@ int ve_init(struct ve_t *self)
 	str_init(&self->msg);
 	self->is_error = 0;
 	self->dirty = 0;
+	str_init(&self->filename);
 
 	return NO_ERR;
 }
@@ -358,6 +360,8 @@ int ve_prompt_run(struct ve_t *self)
 		ve_prompt_run_discard(self);
 	else if (strcmp(prompt, ":quit") == 0)
 		ve_prompt_run_quit(self);
+	else if (strcmp(prompt, ":saveas") == 0)
+		ve_prompt_run_saveas(self);
 	else
 	{
 		char buffer[80];
@@ -394,4 +398,27 @@ void ve_prompt_run_quit(struct ve_t *self)
 	{
 		self->is_running = 0;
 	}
+}
+
+void ve_prompt_run_saveas(struct ve_t *self)
+{
+	str_free(&self->filename);
+	str_init(&self->filename);
+
+	// get the filename argument
+	char *prompt = NULL;
+	str_build(&self->prompt, &prompt);
+	char buffer[80];
+	sscanf(prompt, ":saveas %s", buffer);
+
+	// set the filename state
+	str_appends(&self->filename, buffer, strlen(buffer));
+
+	// set the message
+	char buffer2[80];
+	snprintf(buffer2, sizeof(buffer2), "Filename changed to '%s'", buffer);
+	str_appends(&self->msg, buffer2, strlen(buffer2));
+
+	// free the prompt
+	free(prompt);
 }
