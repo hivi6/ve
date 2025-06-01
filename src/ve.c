@@ -62,6 +62,9 @@ int ve_prompt_mode(struct ve_t *self, int key);
  */
 int ve_prompt_run(struct ve_t *self);
 
+void ve_prompt_run_hello(struct ve_t *self);
+void ve_prompt_run_discard(struct ve_t *self);
+
 // ========================================
 // ve_t - definitions
 // ========================================
@@ -328,17 +331,22 @@ int ve_prompt_run(struct ve_t *self)
 	// create the prompt
 	char *prompt = NULL;
 	str_build(&self->prompt, &prompt);
+	
+	// set the whitespace to nullterminate
+	for (int i = 0; i < self->prompt.len; i++)
+	{
+		if (prompt[i] == ' ')
+		{
+			prompt[i] = 0;
+			break;
+		}
+	}
 
 	// add a basic hello prompt
 	if (strcmp(prompt, ":hello") == 0)
-	{
-		const char *res = "Hello, World!";
-		str_appends(&self->msg, res, strlen(res));
-	}
-	else if (strcmp(prompt, ":quit") == 0)
-	{
-		self->is_running = 0;
-	}
+		ve_prompt_run_hello(self);
+	else if (strcmp(prompt, ":discard") == 0)
+		ve_prompt_run_discard(self);
 	else
 	{
 		char buffer[80];
@@ -349,4 +357,15 @@ int ve_prompt_run(struct ve_t *self)
 
 	free(prompt);
 	return NO_ERR;
+}
+
+void ve_prompt_run_hello(struct ve_t *self)
+{
+	static const char *msg = "Hello, World!";
+	str_appends(&self->msg, msg, strlen(msg));
+}
+
+void ve_prompt_run_discard(struct ve_t *self)
+{
+	self->is_running = 0;
 }
