@@ -64,6 +64,7 @@ int ve_prompt_run(struct ve_t *self);
 
 void ve_prompt_run_hello(struct ve_t *self);
 void ve_prompt_run_discard(struct ve_t *self);
+void ve_prompt_run_quit(struct ve_t *self);
 
 // ========================================
 // ve_t - definitions
@@ -84,6 +85,7 @@ int ve_init(struct ve_t *self)
 	str_init(&self->prompt);
 	str_init(&self->msg);
 	self->is_error = 0;
+	self->dirty = 0;
 
 	return NO_ERR;
 }
@@ -259,6 +261,7 @@ int ve_delete(struct ve_t *self)
 
 int ve_insert_mode(struct ve_t *self, int key)
 {
+	self->dirty = 1;
 	switch(key)
 	{
 	case ENTER_KEY:
@@ -304,13 +307,19 @@ int ve_prompt_mode(struct ve_t *self, int key)
 	switch(key)
 	{
 	case ENTER_KEY:
-		// TODO: execute prompt
 		ve_prompt_run(self);
 
 		// reset the prompt
 		self->mode = NORMAL_MODE;
 		str_free(&self->prompt);
 		str_init(&self->prompt);
+		break;
+	case BACKSPACE_KEY:
+		self->prompt.len--;
+		if (self->prompt.len == 0)
+		{
+			self->mode = NORMAL_MODE;
+		}
 		break;
 	default:
 		// build the prompt
@@ -347,6 +356,8 @@ int ve_prompt_run(struct ve_t *self)
 		ve_prompt_run_hello(self);
 	else if (strcmp(prompt, ":discard") == 0)
 		ve_prompt_run_discard(self);
+	else if (strcmp(prompt, ":quit") == 0)
+		ve_prompt_run_quit(self);
 	else
 	{
 		char buffer[80];
@@ -368,4 +379,19 @@ void ve_prompt_run_hello(struct ve_t *self)
 void ve_prompt_run_discard(struct ve_t *self)
 {
 	self->is_running = 0;
+}
+
+void ve_prompt_run_quit(struct ve_t *self)
+{
+	if (self->dirty)
+	{
+		char buffer[80];
+		snprintf(buffer, sizeof(buffer), "File is not saved");
+		str_appends(&self->msg, buffer, strlen(buffer));
+		self->is_error = 1;
+	}
+	else
+	{
+		self->is_running = 0;
+	}
 }

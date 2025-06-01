@@ -36,6 +36,7 @@ enum
  *	prompt		current prompt command
  *	msg		any message from the editor for the user
  *	is_error	is the message related to error
+ *	dirty		is the state dirtied
  */
 struct ve_t
 {
@@ -51,6 +52,8 @@ struct ve_t
 	struct str_t prompt;
 	struct str_t msg;
 	int is_error;
+
+	int dirty;
 };
 
 /**
