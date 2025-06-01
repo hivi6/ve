@@ -67,6 +67,7 @@ void ve_prompt_run_discard(struct ve_t *self);
 void ve_prompt_run_quit(struct ve_t *self);
 void ve_prompt_run_saveas(struct ve_t *self);
 void ve_prompt_run_read(struct ve_t *self);
+void ve_prompt_run_write(struct ve_t *self);
 
 // ========================================
 // ve_t - definitions
@@ -365,6 +366,8 @@ int ve_prompt_run(struct ve_t *self)
 		ve_prompt_run_saveas(self);
 	else if (strcmp(prompt, ":read") == 0)
 		ve_prompt_run_read(self);
+	else if (strcmp(prompt, ":write") == 0)
+		ve_prompt_run_write(self);
 	else
 	{
 		char buffer[80];
@@ -468,4 +471,55 @@ void ve_prompt_run_read(struct ve_t *self)
 
 	// free the prompt
 	free(prompt);
+}
+
+void ve_prompt_run_write(struct ve_t *self)
+{
+	if (self->filename.len == 0)
+	{
+		const char *msg = "Filename not specified";
+		str_appends(&self->msg, msg, strlen(msg));
+		self->is_error = 1;
+		return;
+	}
+
+	// read the file content
+	char *filename = NULL;
+	str_build(&self->filename, &filename);
+	FILE *fd = fopen(filename, "w");
+
+	// couldn't open the file
+	if (fd == NULL)
+	{
+		char buffer[80];
+		snprintf(buffer, sizeof(buffer), "Couldn't open '%s'", filename);
+		str_appends(&self->msg, buffer, strlen(buffer));
+		self->is_error = 1;
+		free(filename);
+		return;
+	}
+
+	// write the contents of the file
+	int bytes = 0;
+	for (int i = 0; i < self->sz; i++)
+	{
+		char *line = NULL;
+		str_build(&self->lines[i], &line);
+		bytes += fprintf(fd, "%s", line);
+		if (i != self->sz - 1)
+			bytes += fprintf(fd, "\n");
+		free(line);
+	}
+
+	// send the message that the file is written
+	char buffer[80];
+	snprintf(buffer, sizeof(buffer), "'%s' %dL, %dB written", 
+		filename, self->sz, bytes);
+	str_appends(&self->msg, buffer, strlen(buffer));
+
+	// not dirty anymore
+	self->dirty = 0;
+
+	// filename
+	free(filename);
 }
