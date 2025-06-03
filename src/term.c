@@ -71,6 +71,10 @@ void term_init()
 {
 	// initialize the global state
 	ve_init(&GLOBAL);
+
+	// initialize the cursor offsets
+	OFFSET_ROW = 0;
+	OFFSET_COL = 0;
 	
 	// enable raw mode
 	term_enable_raw();
@@ -103,11 +107,13 @@ void term_render()
 	str_init(&b);
 
 	// TODO: calculate the offsets
-	OFFSET_ROW = 0;
-	OFFSET_COL = 0;
-	if (GLOBAL.crow >= WS_ROWS)
+	if (OFFSET_ROW > GLOBAL.crow)
+		OFFSET_ROW = GLOBAL.crow;
+	if (GLOBAL.crow > OFFSET_ROW + WS_ROWS - 1)
 		OFFSET_ROW = GLOBAL.crow - WS_ROWS + 1;
-	if (GLOBAL.ccol >= WS_COLS)
+	if (OFFSET_COL > GLOBAL.ccol)
+		OFFSET_COL = GLOBAL.ccol;
+	if (GLOBAL.ccol > OFFSET_COL + WS_COLS - 1)
 		OFFSET_COL = GLOBAL.ccol - WS_COLS + 1;
 
 	// make the cursor invisible
