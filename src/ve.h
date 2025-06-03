@@ -14,6 +14,7 @@ enum
 	BACKSPACE_KEY,
 	ESC_KEY,
 	QUIT_KEY,
+	TAB_KEY,
 };
 
 enum

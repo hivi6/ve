@@ -156,6 +156,12 @@ void term_read()
 		key = ENTER_KEY;
 	}
 
+	// handle tab
+	if (buffer[0] == '\t' && buffer[1] == 0)
+	{
+		key = TAB_KEY;
+	}
+
 	// handle backspace
 	if (buffer[0] == 127 && buffer[1] == 0)
 	{

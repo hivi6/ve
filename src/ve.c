@@ -271,6 +271,17 @@ int ve_insert_mode(struct ve_t *self, int key)
 	case ENTER_KEY:
 		ve_add(self, '\n');
 		break;
+	case TAB_KEY:
+		{
+			int i = 0;
+			int col = self->ccol;
+			do {
+				ve_add(self, ' ');
+				i++;
+			}
+			while (i < 8 && (col + i) % 8 != 0);
+		}
+		break;
 	case DELETE_KEY:
 		if (self->crow != self->sz - 1 ||
 			self->ccol != self->lines[self->crow].len)
