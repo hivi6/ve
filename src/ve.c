@@ -62,6 +62,27 @@ int ve_prompt_mode(struct ve_t *self, int key);
  */
 int ve_prompt_run(struct ve_t *self);
 
+/**
+ * is the end of the file
+ *
+ * params:
+ *	self	self pointer
+ *	res	where the result is given; 0 for no; 1 for yes
+ */
+int ve_eof(struct ve_t *self, char *res);
+
+/**
+ * current character of the cursor position
+ * if end of the line then '\n'
+ * if end of the file then 0
+ * if any others, then any other ascii character
+ *
+ * params:
+ *	self	self pointer
+ *	res	where result is given
+ */
+int ve_current(struct ve_t *self, char *res);
+
 void ve_prompt_run_hello(struct ve_t *self);
 void ve_prompt_run_discard(struct ve_t *self);
 void ve_prompt_run_quit(struct ve_t *self);
@@ -99,6 +120,34 @@ int ve_free(struct ve_t *self)
 	for (int i = 0; i < self->sz; i++)
 		str_free(self->lines + i);
 	free(self->lines);
+	return NO_ERR;
+}
+
+int ve_eof(struct ve_t *self, char *res)
+{
+	*res = 0;
+	if (self->crow == self->sz - 1 &&
+		self->ccol == self->lines[self->crow].len)
+		*res = 1;
+	return NO_ERR;
+}
+
+int ve_current(struct ve_t *self, char *res)
+{
+	ve_eof(self, res);
+	if (*res == 1)
+	{
+		*res = 0;
+		return NO_ERR;
+	}
+
+	if (self->ccol == self->lines[self->crow].len)
+	{
+		*res = '\n';
+		return NO_ERR;
+	}
+
+	*res = self->lines[self->crow].text[self->ccol];
 	return NO_ERR;
 }
 
@@ -312,6 +361,77 @@ int ve_normal_mode(struct ve_t *self, int key)
 	case ':':
 		self->mode = PROMPT_MODE;
 		ve_prompt_mode(self, key);
+		break;
+	case 'h':
+		ve_next(self, LEFT_KEY);
+		break;
+	case 'j':
+		ve_next(self, DOWN_KEY);
+		break;
+	case 'k':
+		ve_next(self, UP_KEY);
+		break;
+	case 'l':
+		ve_next(self, RIGHT_KEY);
+		break;
+	case 'w':
+		{
+			// 0 = [a-zA-Z0-0_]
+			// 1 = any other non-whitespace
+			// 2 = whitespace
+			char res = 0;
+			ve_current(self, &res);
+			if ('a' <= res && res <= 'z' || 'A' <= res && res <= 'Z' ||
+				'0' <= res && res <= '9' || res == '_')
+				res = 0;
+			else if (res == ' ' || res == '\n' || res == 0)
+				res = 2;
+			else
+				res = 1;
+
+			for (char eof = 0; !eof; ve_eof(self, &eof))
+			{
+				char cur = 0;
+				ve_current(self, &cur);
+				if ('a' <= cur && cur <= 'z' || 'A' <= cur && cur <= 'Z' ||
+					'0' <= cur && cur <= '9' || cur == '_')
+					cur = 0;
+				else if (cur == ' ' || cur == '\n' || cur == 0)
+					cur = 2;
+				else
+					cur = 1;
+				if (cur == res) ve_next(self, RIGHT_KEY);
+				else break;
+			}	
+
+			for (char eof = 0; !eof; ve_eof(self, &eof))
+			{
+				char cur = 0;
+				ve_current(self, &cur);
+				if (cur == ' ' || cur == '\n')
+					ve_next(self, RIGHT_KEY);
+				else
+					break;
+			}
+		}
+		break;
+	case 'W':
+		for (char eof = 0; !eof; ve_eof(self, &eof))
+		{
+			char cur = 0;
+			ve_current(self, &cur);
+			if (cur == ' ' || cur == '\n')
+				break;
+			ve_next(self, RIGHT_KEY);
+		}
+		for (char eof = 0; !eof; ve_eof(self, &eof))
+		{
+			char cur = 0;
+			ve_current(self, &cur);
+			if (cur == ' ' || cur == '\n')
+				ve_next(self, RIGHT_KEY);
+			else break;
+		}
 		break;
 	}
 	return NO_ERR;
