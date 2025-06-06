@@ -432,6 +432,11 @@ int ve_normal_mode(struct ve_t *self, int key)
 				ve_next(self, RIGHT_KEY);
 			else break;
 		}
+	case '$':
+		self->ccol = self->lines[self->crow].len;
+		break;
+	case '0':
+		self->ccol = 0;
 		break;
 	}
 	return NO_ERR;
