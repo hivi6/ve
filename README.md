@@ -2,6 +2,10 @@
 
 visual editor
 
+## Screencast
+
+[![ve - visual editor](https://asciinema.org/a/01wmdIAdei7wRfH3JXJrC53YC.svg)](https://asciinema.org/a/01wmdIAdei7wRfH3JXJrC53YC)
+
 ## build
 
 To build the project and use the editor, run the following commands
