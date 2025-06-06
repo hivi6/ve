@@ -320,6 +320,17 @@ void term_render_line(struct str_t *b, int line)
 	if (line_index >= GLOBAL.sz)
 	{
 		str_appends(b, "\x1b[35m~\x1b[m", 9);
+
+		if (line == WS_ROWS / 3 && GLOBAL.intro)
+		{
+			snprintf(buffer, sizeof(buffer), "ve - a visual text editor");
+			int len = strlen(buffer);
+			if (len >= WS_COLS) len = WS_COLS;
+			int padding = WS_COLS - len;
+			for (int i = 0; i < padding / 2; i++)
+				str_appendc(b, ' ');
+			str_appends(b, buffer, len);
+		}
 	}
 	else
 	{

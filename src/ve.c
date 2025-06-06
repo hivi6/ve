@@ -111,6 +111,7 @@ int ve_init(struct ve_t *self)
 	self->is_error = 0;
 	self->dirty = 0;
 	str_init(&self->filename);
+	self->intro = 1;
 
 	return NO_ERR;
 }
@@ -314,6 +315,7 @@ int ve_delete(struct ve_t *self)
 
 int ve_insert_mode(struct ve_t *self, int key)
 {
+	self->intro = 0;
 	self->dirty = 1;
 	switch(key)
 	{
@@ -589,6 +591,7 @@ void ve_prompt_run_read(struct ve_t *self)
 
 	// set the file as dirty
 	self->dirty = 1;
+	self->intro = 0;
 
 	// read the contents of the file
 	do {

@@ -39,6 +39,7 @@ enum
  *	is_error	is the message related to error
  *	dirty		is the state dirtied
  *	filename	name of the file
+ *	intro		should the editor show intro
  */
 struct ve_t
 {
@@ -57,6 +58,8 @@ struct ve_t
 
 	int dirty;
 	struct str_t filename;
+
+	int intro;
 };
 
 /**
